@@ -1,0 +1,5 @@
+#main{width:100%;height:auto;}
+#left{width:25%;height:600px;}
+#middle{width:45%;height:600px;}
+#right{width:25%;height:600px;margin-left:10px;}
+#left,#middle,#right{float:left;}
