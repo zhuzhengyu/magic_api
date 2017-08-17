@@ -14,7 +14,7 @@ class magic_api {
 	public $selected_api;
 	
 	public $interface;
-	public $class_name;
+// 	public $class_name;
 	
 	public $api_detail;
 	
@@ -31,14 +31,10 @@ class magic_api {
 			if ($this->selected_file) self::apiList();
 		}
 		
-		if (isset($_GET['c']) && isset($_GET['m'])) {
+		if (isset($_GET['m'])) {
 			$this->selected_api = $_GET['m'];
 			if ($this->selected_api) self::apiDetail();
 		}
-		
-	}
-	
-	public function __destruct() {
 		
 	}
 	
@@ -62,53 +58,67 @@ class magic_api {
 		}
 	}
 	
-	private function apiList() {
-		$origin_classes = get_declared_classes();
-		function __autoload($a) {
-			$class = 'class ' . $a . '{}';
-			eval($class);
-		}
-		include BASEPATH . '/' . $this->selected_file;
-		$new_classes = get_declared_classes();
-		$classes_diff = array_diff($new_classes, $origin_classes);
-		foreach ($classes_diff as $v) {
-			// 		if ($v == 'CI_Controller') continue;
-			$method_list = get_class_methods($v);
-			if ($method_list) {
-				$useful_classes[$v] = $method_list;
+	private function saveApiComment() {
+		$file = file_get_contents(BASEPATH . '/' . $this->selected_file);
+		$replace_return = '<br/>';//@TODO
+		$temp = str_replace(array("\r\n", "\r", "\n", "\t"), array($replace_return, $replace_return, $replace_return, '    '), $file);//@TODO
+		
+		$temp_arr = explode($replace_return, $temp);
+		
+		$start_doc = false;
+		$end_doc = false;
+		$save_file_arr = array();
+		foreach ($temp_arr as $k => $v) {
+			$trim_v = trim($v);
+			if ($trim_v == '/**') $start_doc = true;
+			if ($trim_v == '*/') $end_doc = true;
+				
+			if ($start_doc != true) continue;
+			$api_name_arr = explode('@apiName', $trim_v);
+			if (isset($api_name_arr[1])) $apiName = trim(end($api_name_arr));
+			$save_arr[] = $trim_v;
+			if ($start_doc == true && $end_doc == true)	{
+				$method_temp_arr = explode(' ', stristr($temp_arr[$k + 1], '(', true));
+				$save_arr[] = end($method_temp_arr);
+				$save_file_arr[$apiName] = $save_arr;
+				$save_arr = array();
+				$start_doc = $end_doc = false;
 			}
 		}
-
-		if (isset($useful_classes) && $useful_classes) {
-			foreach ($useful_classes as $class_name => $method_list) {
-				foreach ($method_list as $method) {
-					$c_m = new ReflectionMethod($class_name, $method);
-					$temp = $c_m->getDocComment();
-					$temp = str_replace(array("\r\n", "\r", "\n"), '|R|', $temp);
-					$t = explode("|R|", $temp);
-					$t = str_replace("\t", ' ', $t);
-					if (isset($t[1])) {
-						$tt = explode(' ', $t[1]);
-						foreach ($tt as $k => $v) {
-							if ($v == ' ') unset($tt[$k]);
-						}
-						$interface[$method] = end($tt);
+		
+		$save_data = json_encode($save_file_arr, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+		$file = 'customer/' . PROJECT . '/api/' . $this->selected_file;
+		file_put_contents($file, $save_data);
+	}
+	
+	private function apiList() {
+		$this->use_file_cache == false && self::saveApiComment();
+		$file = 'customer/' . PROJECT . '/api/' . $this->selected_file;
+		$data_json = file_get_contents($file);
+		$data_arr = json_decode($data_json, true);
+		
+		$api_list = array();
+		if (is_array($data_arr)) {
+			foreach ($data_arr as $apiName => $docComment) {
+				$t = str_replace("\t", ' ', $docComment);
+				if (isset($t[1])) {
+					$tt = explode(' ', $t[1]);
+					foreach ($tt as $k => $v) {
+						if ($v == ' ') unset($tt[$k]);
 					}
+					$api_list[$apiName] = end($tt);
 				}
 			}
 		}
-		$this->api_list = isset($interface) ? $interface : array();
-		$this->class_name = $class_name;
+		
+		$this->api_list = $api_list;
 	}
 	
 	private function apiDetail() {
-		$class = $this->class_name;
-		$method = $this->selected_api;
-		$c_m = new ReflectionMethod($class, $method);
-		
-		$temp = $c_m->getDocComment();
-		$temp = str_replace(array("\r\n", "\r", "\n"), '|R|', $temp);
-		$a = explode("|R|", $temp);
+		$file = 'customer/' . PROJECT . '/api/' . $this->selected_file;
+		$data_json = file_get_contents($file);
+		$data_arr = json_decode($data_json, true);
+		$a = $data_arr[$this->selected_api];
 		$first_line_arr = explode(' ', str_replace(array('{', '}'), '', $a[1]));
 		$method = $first_line_arr[3];
 		foreach ($a as $k => $v) {
@@ -149,17 +159,6 @@ $api_detail = $mApi->api_detail;
 $url = 'api.php';
 $this_url = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
 
-// echo '-----project-----';
-// pr($project_list);
-
-// echo '-----file-----';
-// pr($file_list);
-
-// echo '-----api_list-----';
-// pr($api_list);
-
-// echo '-----api_detail-----';
-// pr($api_detail);
 ?>
 
 
@@ -188,7 +187,7 @@ var css_site = '<?php echo CSS_SITE;?>';
 			<div id="left_top">
 				<table>
 					<tr>
-						<th>项目</th>
+						<th>项目名</th>
 						<th>操作</th>
 					</tr>
 <?php
@@ -197,7 +196,10 @@ if ($project_list) {
 ?>
 					<tr>
 						<td><a href="<?php echo $url . '?p=' . $v;?>"><?php echo $v;?></a></td>
-						<td><a href="<?php echo 'set.php?p=' . $v;?>">编辑</a></td>
+						<td>
+							<a href="<?php echo 'index.php?a=edit&p=' . $v;?>">编辑</a>
+							<a href="<?php echo 'index.php?a=delete&p=' . $v;?>">删除</a>
+						</td>
 					</tr>
 <?php
 	}
@@ -229,7 +231,7 @@ if (isset($api_list) && is_array($api_list)) {
 	foreach ($api_list as $k => $v) {
 ?>
 					<tr>
-						<td><a href="<?php echo $url . '?p=' . $mApi->selected_project . '&f=' . $mApi->selected_file. '&c=' . $mApi->class_name . '&m=' . $k;?>"><?php echo $v;?></a></td>
+						<td><a href="<?php echo $url . '?p=' . $mApi->selected_project . '&f=' . $mApi->selected_file . '&m=' . $k;?>"><?php echo $v;?></a></td>
 					</tr>
 <?php
 	}
@@ -269,7 +271,7 @@ if (isset($api_detail)) {
 				<input type="submit" value="commit"/>
 				</form>
 			</div>
-			<div id="middle_bottom"><?php isset($response) && php_api\pr($response);?></div>
+			<div id="middle_bottom"><?php isset($response) && pr($response);?></div>
 		</div>
 		<div id="right">
 ----------新增参数----------
@@ -315,7 +317,7 @@ if (isset($api_detail)) {
 			var value = $(this).val();
 			var key = $(this).attr('name');
 			$('#middle').find('.' + key).val(value);
-			 });
+		});
 	}
 
 	function modify_param(key, value) {
