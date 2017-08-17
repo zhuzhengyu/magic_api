@@ -3,7 +3,7 @@
 <?php
 class user{
 	/**
-     * @api {get} / 获取用户信息
+	 * @api {get} / 获取用户信息
 	 * @apiDescription 获取用户信息
 	 * @apiGroup user
 	 * @apiName / detail
