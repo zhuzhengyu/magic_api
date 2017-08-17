@@ -16,6 +16,7 @@ class magic_core {
 	// 	public $class_name;
 
 	public $api_detail;
+	public $api_request_uri;
 
 	public function __construct() {
 		$this->customer_file_path = 'customer';
@@ -125,6 +126,7 @@ class magic_core {
 			if (stristr($v, '@apiSampleRequest')) {
 				$request_uri = explode(' ', $v);
 				$request_uri = end($request_uri);
+				$this->api_request_uri = $request_uri;
 			}
 			if (!stristr($v, '@apiParam')) continue;
 			$v = str_replace(array("\t", ']', '[', '*', '@apiParam'), array(' ', ' ', '', '', ''), $v);
@@ -146,5 +148,4 @@ class magic_core {
 		}
 		$this->api_detail = $save;
 	}
-
 }

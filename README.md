@@ -1,4 +1,4 @@
-#example
+# example
 ```php
 <?php
 class user{
