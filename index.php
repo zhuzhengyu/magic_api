@@ -5,6 +5,7 @@ class base {
 
 class config {
 	public function project_list() {
+		if (!is_dir('customer')) mkdir('customer');
 		$project_list = scandir('customer');
 		foreach ($project_list as $k => $v) {
 			if (in_array($v, array('.', '..'))) unset($project_list[$k]);
