@@ -41,7 +41,8 @@ class magic_api {
 	private function projectList() {
 		$project_list = scandir($this->customer_file_path);
 		foreach ($project_list as $k => $v) {
-			if (in_array($v, array('.', '..'))) unset($project_list[$k]);
+			$path = 'customer/' . $v;
+			if (in_array($v, array('.', '..')) || !is_dir($path)) unset($project_list[$k]);
 		}
 		$this->project_list = $project_list;
 	}
