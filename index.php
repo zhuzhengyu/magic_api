@@ -1,27 +1,5 @@
 <?php
-class config {
-	public function project_list() {
-// 		if (!is_dir('customer')) mkdir('customer');
-
-		$project_list = scandir('customer');
-		foreach ($project_list as $k => $v) {
-			$path = 'customer/' . $v;
-			if (in_array($v, array('.', '..')) || !is_dir($path)) unset($project_list[$k]);
-		}
-		return $project_list;
-	}
-	
-	public function get() {
-		
-	}
-}
-
-function pr($var) {
-	echo '<pre>';
-	print_r($var);
-	echo '</pre>';
-}
-
+require 'magic_core.php';
 $error_msg = '';
 
 $config_arr['PROJECT']['name']			= '项目名';
@@ -34,12 +12,11 @@ $config_arr['BASEPATH']['example']		= 'D:\work\workspace\magic_zhu';
 
 $config_arr['TARGET_URL']['name']		= '目标基础URL地址';
 $config_arr['TARGET_URL']['value']		= '';
-$config_arr['TARGET_URL']['example']	= 'http:\/\/www.fruitday.com';
+$config_arr['TARGET_URL']['example']	= 'http:\/\/www.ctrip.com';
 
 if (isset($_GET['a']) && $_GET['a'] == 'edit') {
 	$data = file_get_contents('customer/' . $_GET['p'] . '/config.json');
 	$data_arr = json_decode($data, true);
-// 	pr($data_arr);
 	foreach ($data_arr as $k => $v) {
 		$config_arr[$k]['value'] = $v;
 	}
@@ -87,8 +64,8 @@ if (isset($_GET['a']) && $_GET['a'] == 'edit') {
 	$rmDirFile('customer/' . $_GET['p']);
 	exit(header('Location: api.php'));
 } else {
-	$config = new config();
-	$project_list = $config->project_list();
+	$mApi = new magic_core;
+	$project_list = $mApi->project_list;
 	if ($project_list) exit(header('Location: api.php'));
 }
 ?>
