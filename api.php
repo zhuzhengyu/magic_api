@@ -46,6 +46,8 @@ var css_site = '<?php echo CSS_SITE;?>';
 	<div id="main">
 		<div id="left">
 ---------------项目---------------
+<br/>
+<a href="index.php?a=create">新增一个项目</a>
 			<div id="left_top">
 				<table>
 					<tr>
@@ -152,6 +154,8 @@ if (isset($api_detail)) {
 				</table>
 			</div>
 ----------自动填充参数----------
+<br/>
+此处参数将在载入接口时自动填充至接口详情界面中
 			<div id="right_main"></div>
 			<div id="right_bottom"></div>
 		</div>

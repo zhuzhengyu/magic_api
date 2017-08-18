@@ -55,8 +55,11 @@ class magic_core {
 			define($k, $v);
 		}
 		$this->file_list = scandir(BASEPATH);
+		$suf_file_arr = explode(";", SUF_FILE);
 		foreach ($this->file_list as $k => $v) {
-			if (in_array($v, array('.', '..'))) unset($this->file_list[$k]);
+			$file_name_arr = explode('.', $v);
+			$now_suf_file = end($file_name_arr);
+			if (in_array($v, array('.', '..')) || !in_array($now_suf_file, $suf_file_arr)) unset($this->file_list[$k]);
 		}
 	}
 

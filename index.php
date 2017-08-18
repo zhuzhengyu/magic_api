@@ -14,6 +14,10 @@ $config_arr['TARGET_URL']['name']		= '目标基础URL地址';
 $config_arr['TARGET_URL']['value']		= '';
 $config_arr['TARGET_URL']['example']	= 'http:\/\/www.ctrip.com';
 
+$config_arr['SUF_FILE']['name']			= '参与生成文档的文件后缀(多个用半角;分号分割)';
+$config_arr['SUF_FILE']['value']		= 'php';
+$config_arr['SUF_FILE']['example']		= 'php';
+
 if (isset($_GET['a']) && $_GET['a'] == 'edit') {
 	$data = file_get_contents('customer/' . $_GET['p'] . '/config.json');
 	$data_arr = json_decode($data, true);
@@ -32,7 +36,8 @@ if (isset($_GET['a']) && $_GET['a'] == 'edit') {
 				)
 		));
 		
-		if (!$_POST['TARGET_URL'] || !file_get_contents($_POST['TARGET_URL'], 0, $context)) throw new \Exception('error: target_url!');
+// 		if (!$_POST['TARGET_URL'] || !file_get_contents($_POST['TARGET_URL'], 0, $context)) throw new \Exception('error: target_url!');
+		if (!$_POST['TARGET_URL']) throw new \Exception('error: target_url!');
 		
 		$data = $_POST;
 		$file_path = 'customer/' . $_POST['PROJECT'];
@@ -63,6 +68,8 @@ if (isset($_GET['a']) && $_GET['a'] == 'edit') {
 	
 	$rmDirFile('customer/' . $_GET['p']);
 	exit(header('Location: api.php'));
+} elseif($_GET['a'] == 'create') {
+	
 } else {
 	$mApi = new magic_core;
 	$project_list = $mApi->project_list;
