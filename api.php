@@ -1,5 +1,6 @@
 <?php
 require 'magic_core.php';
+require 'function.php';
 require 'config.php';
 
 $mApi = new magic_core;
