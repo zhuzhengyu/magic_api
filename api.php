@@ -62,7 +62,8 @@ if ($project_list) {
 						<td><a href="<?php echo $url . '?p=' . $v;?>"><?php echo $v;?></a></td>
 						<td>
 							<a href="<?php echo 'index.php?a=edit&p=' . $v;?>">编辑</a>
-							<a href="<?php echo 'index.php?a=delete&p=' . $v;?>">删除</a>
+							<a href="<?php echo 'index.php?a=delete&p=' . $v . '/api';?>">清空项目缓存</a>
+							<a href="<?php echo 'index.php?a=delete&p=' . $v;?>">删除项目</a>
 						</td>
 					</tr>
 <?php

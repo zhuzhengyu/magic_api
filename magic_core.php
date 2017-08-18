@@ -54,12 +54,49 @@ class magic_core {
 		foreach ($config as $k => $v) {
 			define($k, $v);
 		}
-		$this->file_list = scandir(BASEPATH);
+		
+		is_dir($this->customer_file_path . '/' . $this->selected_project . '/api') || mkdir($this->customer_file_path . '/' . $this->selected_project . '/api');
 		$suf_file_arr = explode(";", SUF_FILE);
+		if ($this->use_file_cache == false) {
+			$createFileList = function ($path, $customer_path) use (&$createFileList) {
+				if (is_dir($path)) {
+					$result = scandir($path);
+					foreach ($result as $k => $v) {
+						if (in_array($v, array('.', '..'))) continue;
+						$sub_path = $path . '/' . $v;
+						$sub_customer_path = $customer_path . '/' . $v;
+						if (is_dir($sub_path)) {
+							!is_dir($sub_customer_path) && mkdir($sub_customer_path);
+							$createFileList($sub_path, $sub_customer_path);
+						} else {
+							!file_exists($sub_customer_path) && file_put_contents($sub_customer_path, '');
+						}
+					}
+				} else {
+					mkdir($path);
+				}
+			};
+			$createFileList(BASEPATH, $this->customer_file_path . '/' . $this->selected_project . '/api');
+		}
+		
+// 		scandir($this->customer_file_path . '/' . $this->selected_project . '/api');
+		$getFileList = function ($path) use (&$getFileList) {
+			if (is_dir($path)) {
+				$result = scandir($path);
+				foreach ($result as $k => $v) {
+					if (in_array($v, array('.', '..'))) continue;
+					$sub_path = $path . '/' . $v;
+					if (is_dir($sub_path)) $getFileList($sub_path);
+					else $this->file_list[] = $path . '/' . $v;
+				}
+			}
+		};
+		$getFileList($this->customer_file_path . '/' . $this->selected_project . '/api');
+		
 		foreach ($this->file_list as $k => $v) {
-			$file_name_arr = explode('.', $v);
-			$now_suf_file = end($file_name_arr);
-			if (in_array($v, array('.', '..')) || !in_array($now_suf_file, $suf_file_arr)) unset($this->file_list[$k]);
+			$temp = explode(".", $v);
+			if (!in_array(end($temp), $suf_file_arr)) unset($this->file_list[$k]);
+			else $this->file_list[$k] = str_replace($this->customer_file_path . '/' . $this->selected_project . '/api/', '', $v);
 		}
 	}
 
