@@ -68,7 +68,7 @@ if (isset($_GET['a']) && $_GET['a'] == 'edit') {
 	
 	$rmDirFile('customer/' . $_GET['p']);
 	exit(header('Location: api.php'));
-} elseif($_GET['a'] == 'create') {
+} elseif(isset($_GET['a']) && $_GET['a'] == 'create') {
 	
 } else {
 	$mApi = new magic_core;
