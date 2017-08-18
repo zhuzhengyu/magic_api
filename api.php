@@ -1,14 +1,8 @@
 <?php
-function pr($var) {
-	echo '<pre>';
-	print_r($var);
-	echo '</pre>';
-}
 require 'magic_core.php';
 require 'config.php';
 
 $mApi = new magic_core;
-
 $project_list = $mApi->project_list;
 if (!$project_list) exit(header('Location: index.php'));
 $file_list = $mApi->file_list;
@@ -18,16 +12,11 @@ $api_detail = $mApi->api_detail;
 $url = 'api.php';
 $this_url = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
 
-
 if (strtoupper($_SERVER['REQUEST_METHOD']) == 'POST') {
 	include 'vendor/restclient.php';
-	// 	php_api\pr(TARGET_URL);exit;
 	$request_url = TARGET_URL . '/' . trim($mApi->api_request_uri, '/');
 	$rc = new RestClient();
-	pr($mApi->api_request_method);
 	$result = $rc->execute($request_url, $mApi->api_request_method, http_build_query($_POST));
-	// 	$response = $result->response;
-	// 	$response = json_encode(json_decode($result->response, true));
 	$response = json_encode(json_decode($result->response, true), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 }
 
