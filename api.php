@@ -24,7 +24,8 @@ if (strtoupper($_SERVER['REQUEST_METHOD']) == 'POST') {
 	// 	php_api\pr(TARGET_URL);exit;
 	$request_url = TARGET_URL . '/' . trim($mApi->api_request_uri, '/');
 	$rc = new RestClient();
-	$result = $rc->execute($request_url, $_GET['m'], http_build_query($_POST));
+	pr($mApi->api_request_method);
+	$result = $rc->execute($request_url, $mApi->api_request_method, http_build_query($_POST));
 	// 	$response = $result->response;
 	// 	$response = json_encode(json_decode($result->response, true));
 	$response = json_encode(json_decode($result->response, true), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);

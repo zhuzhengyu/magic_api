@@ -17,6 +17,7 @@ class magic_core {
 
 	public $api_detail;
 	public $api_request_uri;
+	public $api_request_method;
 
 	public function __construct() {
 		$this->customer_file_path = 'customer';
@@ -121,7 +122,7 @@ class magic_core {
 		$data_arr = json_decode($data_json, true);
 		$a = $data_arr[$this->selected_api];
 		$first_line_arr = explode(' ', str_replace(array('{', '}'), '', $a[1]));
-		$method = $first_line_arr[3];
+		$this->api_request_method = $first_line_arr[2];//@TODO
 		foreach ($a as $k => $v) {
 			if (stristr($v, '@apiSampleRequest')) {
 				$request_uri = explode(' ', $v);
