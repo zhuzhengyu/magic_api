@@ -120,6 +120,7 @@ class magic_core {
 			if (isset($api_name_arr[1])) $apiName = trim(end($api_name_arr));
 			$save_arr[] = $trim_v;
 			if ($start_doc == true && $end_doc == true)	{
+				if (!isset($apiName)) continue;
 				$method_temp_arr = explode(' ', stristr($temp_arr[$k + 1], '(', true));
 				$save_arr[] = end($method_temp_arr);
 				$save_file_arr[$apiName] = $save_arr;
