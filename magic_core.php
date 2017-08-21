@@ -13,30 +13,29 @@ class magic_core {
 	public $selected_api;
 
 	public $interface;
-	// 	public $class_name;
+// 	public $class_name;
 
 	public $api_detail;
 	public $api_request_uri;
 	public $api_request_method;
 
-	public function __construct() {
+	public function __construct($param) {
 		$this->customer_file_path = 'customer';
 		self::projectList();
-		if (isset($_GET['p'])) {
-			$this->selected_project = $_GET['p'];
+		if (isset($param['p'])) {
+			$this->selected_project = $param['p'];
 			if ($this->selected_project) self::fileList();
 		}
 
-		if (isset($_GET['f'])) {
-			$this->selected_file = $_GET['f'];
+		if (isset($param['f'])) {
+			$this->selected_file = $param['f'];
 			if ($this->selected_file) self::apiList();
 		}
 
-		if (isset($_GET['m'])) {
-			$this->selected_api = $_GET['m'];
+		if (isset($param['m'])) {
+			$this->selected_api = $param['m'];
 			if ($this->selected_api) self::apiDetail();
 		}
-
 	}
 
 	private function projectList() {
@@ -189,5 +188,16 @@ class magic_core {
 			$save[$k]['desc']	= $new_row[2];
 		}
 		$this->api_detail = $save;
+	}
+	
+	public function debug_api() {
+		if (strtoupper($_SERVER['REQUEST_METHOD']) == 'POST') {
+			include 'vendor/restclient.php';
+			$request_url = TARGET_URL . '/' . trim($this->api_request_uri, '/');
+			$rc = new RestClient();
+			$result = $rc->execute($request_url, $this->api_request_method, http_build_query($_POST));
+			$response = json_encode(json_decode($result->response, true), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+			return $response;
+		}
 	}
 }

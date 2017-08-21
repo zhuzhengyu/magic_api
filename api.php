@@ -3,7 +3,9 @@ require 'magic_core.php';
 require 'function.php';
 require 'config.php';
 
-$mApi = new magic_core;
+
+$mApi = new magic_core($_GET);
+
 $project_list = $mApi->project_list;
 if (!$project_list) exit(header('Location: index.php'));
 $file_list = $mApi->file_list;
@@ -13,14 +15,7 @@ $api_detail = $mApi->api_detail;
 $url = 'api.php';
 $this_url = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
 
-if (strtoupper($_SERVER['REQUEST_METHOD']) == 'POST') {
-	include 'vendor/restclient.php';
-	$request_url = TARGET_URL . '/' . trim($mApi->api_request_uri, '/');
-	$rc = new RestClient();
-	$result = $rc->execute($request_url, $mApi->api_request_method, http_build_query($_POST));
-	$response = json_encode(json_decode($result->response, true), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-}
-
+$response = $mApi->debug_api();
 ?>
 
 
@@ -88,15 +83,20 @@ if (isset($file_list) && is_array($file_list)) {
 ?>
 				</table>
 			</div>
----------------方法---------------
+---------------方法(实际接口)---------------
 			<div id="left_bottom">
 				<table>
+					<tr>
+						<th>接口</th>
+						<th>操作</th>
+					</tr>
 <?php
 if (isset($api_list) && is_array($api_list)) {
 	foreach ($api_list as $k => $v) {
 ?>
 					<tr>
 						<td><a href="<?php echo $url . '?p=' . $mApi->selected_project . '&f=' . $mApi->selected_file . '&m=' . $k;?>"><?php echo $v;?></a></td>
+						<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="<?php echo 'testing.php?p=' . $mApi->selected_project . '&f=' . $mApi->selected_file . '&m=' . $k;?>" target="_blank">加入测试流</a></td>
 					</tr>
 <?php
 	}
