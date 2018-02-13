@@ -15,7 +15,9 @@ $api_detail = $mApi->api_detail;
 $url = 'api.php';
 $this_url = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
 
-$response = $mApi->debug_api();
+if (strtoupper($_SERVER['REQUEST_METHOD']) == 'POST') {
+	$response = $mApi->debug_api();
+}
 ?>
 
 

@@ -1,4 +1,9 @@
 <?php
+/**
+ * @author    Magic Zhu <234079961@qq.com>
+ * @version   0.1.0
+ * @link      https://github.com/zhuzhengyu/magic_api
+ */
 require 'magic_core.php';
 $error_msg = '';
 
