@@ -1,147 +1,13 @@
 <?php
+require 'magic_core.php';
 require 'function.php';
 require 'config.php';
-class magic_api {
-	public $use_file_cache = false;
-	
-	public $project_list;
-	public $selected_project;
-	
-	public $file_list;
-	public $selected_file;
-	
-	public $api_list;
-	public $selected_api;
-	
-	public $interface;
-	public $class_name;
-	
-	public $api_detail;
-	
-	public function __construct() {
-		$this->customer_file_path = 'customer';
-		self::projectList();
-		if (isset($_GET['p'])) {
-			$this->selected_project = $_GET['p'];
-			if ($this->selected_project) self::fileList();
-		}
-		
-		if (isset($_GET['f'])) {
-			$this->selected_file = $_GET['f'];
-			if ($this->selected_file) self::apiList();
-		}
-		
-		if (isset($_GET['c']) && isset($_GET['m'])) {
-			$this->selected_api = $_GET['m'];
-			if ($this->selected_api) self::apiDetail();
-		}
-		
-	}
-	
-	public function __destruct() {
-		
-	}
-	
-	private function projectList() {
-		$project_list = scandir($this->customer_file_path);
-		foreach ($project_list as $k => $v) {
-			if (in_array($v, array('.', '..'))) unset($project_list[$k]);
-		}
-		$this->project_list = $project_list;
-	}
-	
-	private function fileList() {
-		$config_json = file_get_contents($this->customer_file_path . '/' . $this->selected_project . '/config.json');
-		$config = json_decode($config_json, true);
-		foreach ($config as $k => $v) {
-			define($k, $v);
-		}
-		$this->file_list = scandir(BASEPATH);
-		foreach ($this->file_list as $k => $v) {
-			if (in_array($v, array('.', '..'))) unset($this->file_list[$k]);
-		}
-	}
-	
-	private function apiList() {
-		$origin_classes = get_declared_classes();
-		function __autoload($a) {
-			$class = 'class ' . $a . '{}';
-			eval($class);
-		}
-		include BASEPATH . '/' . $this->selected_file;
-		$new_classes = get_declared_classes();
-		$classes_diff = array_diff($new_classes, $origin_classes);
-		foreach ($classes_diff as $v) {
-			// 		if ($v == 'CI_Controller') continue;
-			$method_list = get_class_methods($v);
-			if ($method_list) {
-				$useful_classes[$v] = $method_list;
-			}
-		}
 
-		if (isset($useful_classes) && $useful_classes) {
-			foreach ($useful_classes as $class_name => $method_list) {
-				foreach ($method_list as $method) {
-					$c_m = new ReflectionMethod($class_name, $method);
-					$temp = $c_m->getDocComment();
-					$temp = str_replace(array("\r\n", "\r", "\n"), '|R|', $temp);
-					$t = explode("|R|", $temp);
-					$t = str_replace("\t", ' ', $t);
-					if (isset($t[1])) {
-						$tt = explode(' ', $t[1]);
-						foreach ($tt as $k => $v) {
-							if ($v == ' ') unset($tt[$k]);
-						}
-						$interface[$method] = end($tt);
-					}
-				}
-			}
-		}
-		$this->api_list = isset($interface) ? $interface : array();
-		$this->class_name = $class_name;
-	}
-	
-	private function apiDetail() {
-		$class = $this->class_name;
-		$method = $this->selected_api;
-		$c_m = new ReflectionMethod($class, $method);
-		
-		$temp = $c_m->getDocComment();
-		$temp = str_replace(array("\r\n", "\r", "\n"), '|R|', $temp);
-		$a = explode("|R|", $temp);
-		$first_line_arr = explode(' ', str_replace(array('{', '}'), '', $a[1]));
-		$method = $first_line_arr[3];
-		foreach ($a as $k => $v) {
-			if (stristr($v, '@apiSampleRequest')) {
-				$request_uri = explode(' ', $v);
-				$request_uri = end($request_uri);
-			}
-			if (!stristr($v, '@apiParam')) continue;
-			$v = str_replace(array("\t", ']', '[', '*', '@apiParam'), array(' ', ' ', '', '', ''), $v);
-			$row = explode(' ', $v);
-			$new_row = array();
-			// 		pr($v);
-			foreach($row as $kk => $vv) {
-				if ($vv != '') {
-					if (isset($new_row[2])) {
-						$new_row[2] .= $vv;
-					} else {
-						$new_row[] = $vv;
-					}
-				}
-			}
-			$save[$k]['type']	= $new_row[0];
-			$save[$k]['param']	= $new_row[1];
-			$save[$k]['desc']	= $new_row[2];
-		}
-		$this->api_detail = $save;
-	}
-	
-}
 
-$mApi = new magic_api();
+$mApi = new magic_core($_GET);
 
 $project_list = $mApi->project_list;
+if (!$project_list) exit(header('Location: index.php'));
 $file_list = $mApi->file_list;
 $api_list = $mApi->api_list;
 $api_detail = $mApi->api_detail;
@@ -149,17 +15,9 @@ $api_detail = $mApi->api_detail;
 $url = 'api.php';
 $this_url = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
 
-// echo '-----project-----';
-// pr($project_list);
-
-// echo '-----file-----';
-// pr($file_list);
-
-// echo '-----api_list-----';
-// pr($api_list);
-
-// echo '-----api_detail-----';
-// pr($api_detail);
+if (strtoupper($_SERVER['REQUEST_METHOD']) == 'POST') {
+	$response = $mApi->debug_api();
+}
 ?>
 
 
@@ -185,10 +43,12 @@ var css_site = '<?php echo CSS_SITE;?>';
 	<div id="main">
 		<div id="left">
 ---------------项目---------------
+<br/>
+<a href="index.php?a=create">新增一个项目</a>
 			<div id="left_top">
 				<table>
 					<tr>
-						<th>项目</th>
+						<th>项目名</th>
 						<th>操作</th>
 					</tr>
 <?php
@@ -197,7 +57,11 @@ if ($project_list) {
 ?>
 					<tr>
 						<td><a href="<?php echo $url . '?p=' . $v;?>"><?php echo $v;?></a></td>
-						<td><a href="<?php echo 'set.php?p=' . $v;?>">编辑</a></td>
+						<td>
+							<a href="<?php echo 'index.php?a=edit&p=' . $v;?>">编辑</a>
+							<a href="<?php echo 'index.php?a=delete&p=' . $v . '/api';?>">清空项目缓存</a>
+							<a href="<?php echo 'index.php?a=delete&p=' . $v;?>">删除项目</a>
+						</td>
 					</tr>
 <?php
 	}
@@ -221,15 +85,20 @@ if (isset($file_list) && is_array($file_list)) {
 ?>
 				</table>
 			</div>
----------------方法---------------
+---------------方法(实际接口)---------------
 			<div id="left_bottom">
 				<table>
+					<tr>
+						<th>接口</th>
+						<th>操作</th>
+					</tr>
 <?php
 if (isset($api_list) && is_array($api_list)) {
 	foreach ($api_list as $k => $v) {
 ?>
 					<tr>
-						<td><a href="<?php echo $url . '?p=' . $mApi->selected_project . '&f=' . $mApi->selected_file. '&c=' . $mApi->class_name . '&m=' . $k;?>"><?php echo $v;?></a></td>
+						<td><a href="<?php echo $url . '?p=' . $mApi->selected_project . '&f=' . $mApi->selected_file . '&m=' . $k;?>"><?php echo $v;?></a></td>
+						<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="<?php echo 'testing.php?p=' . $mApi->selected_project . '&f=' . $mApi->selected_file . '&m=' . $k;?>" target="_blank">加入测试流</a></td>
 					</tr>
 <?php
 	}
@@ -269,7 +138,7 @@ if (isset($api_detail)) {
 				<input type="submit" value="commit"/>
 				</form>
 			</div>
-			<div id="middle_bottom"><?php isset($response) && php_api\pr($response);?></div>
+			<div id="middle_bottom"><?php isset($response) && pr($response);?></div>
 		</div>
 		<div id="right">
 ----------新增参数----------
@@ -288,6 +157,8 @@ if (isset($api_detail)) {
 				</table>
 			</div>
 ----------自动填充参数----------
+<br/>
+此处参数将在载入接口时自动填充至接口详情界面中
 			<div id="right_main"></div>
 			<div id="right_bottom"></div>
 		</div>
@@ -315,7 +186,7 @@ if (isset($api_detail)) {
 			var value = $(this).val();
 			var key = $(this).attr('name');
 			$('#middle').find('.' + key).val(value);
-			 });
+		});
 	}
 
 	function modify_param(key, value) {
